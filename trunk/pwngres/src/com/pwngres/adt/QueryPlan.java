@@ -1,4 +1,5 @@
-package tool;
+package com.pwngres.adt;
+
 
 public class QueryPlan {
 

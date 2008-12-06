@@ -1,4 +1,4 @@
-package tool;
+package com.pwngres.adt;
 
 import java.util.*;
 
@@ -34,7 +34,13 @@ public class Operator {
 	}
 	
 	public String toString() {
-		return "{" + id +  " || Inputs: " + inputs + "}";
+		//return "{" + id +  " || Inputs: " + inputs + "}";
+		
+		String string = "==D " + id; 
+		for (Operator op : inputs) {
+			string += "\n\t " + op; 
+		}
+		return string;
 	}
 	
 }

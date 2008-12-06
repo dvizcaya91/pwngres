@@ -15,8 +15,8 @@ public class Test {
 
 		String host = "//localhost:5432/";
 		String username = "postgres";
-		String password = "postgres";
-		String database = "test";
+		String password = "jamn1986";
+		String database = "pwngres";
 
 		PostgresConnection pgconnect = new PostgresConnection(
 				host, username, password, database);

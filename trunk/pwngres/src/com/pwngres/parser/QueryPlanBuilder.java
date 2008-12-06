@@ -1,7 +1,13 @@
-package tool;
+package com.pwngres.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+
+
+import com.pwngres.adt.Join;
+import com.pwngres.adt.Operator;
+import com.pwngres.adt.QueryPlan;
+import com.pwngres.adt.Select;
 
 public class QueryPlanBuilder {
 
@@ -16,6 +22,45 @@ public class QueryPlanBuilder {
 	String ARROW = "->";
 	
 	public QueryPlanBuilder() {}
+	
+	
+	public QueryPlan buildPlan(List<String> textPlan) {
+		
+		if (textPlan == null || textPlan.isEmpty()) 
+			return null;
+		
+		// plan not empty. 
+		// figure out what the root operation is and 
+		// dispatch to appropriate parser
+		OperatorParser parser = ParserFactory.parserFor(PostgresOp.typeOf(textPlan)); 
+		QueryPlan plan = parser.parse(textPlan); 
+		
+		return plan;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	public QueryPlan parseAnalyseQueryPlan(List<String> queryPlan) {
@@ -120,6 +165,12 @@ public class QueryPlanBuilder {
 		}
 	}
 	
+	/**
+	 * Returns the type of operator from a line of EXPLAIN ANALYZE
+	 * 
+	 * @param line A line containing the description of the operator
+	 * @return
+	 */
 	private String getOperator(String line) {
 		if (line.contains(SEQ_SCAN))
 			return SEQ_SCAN;

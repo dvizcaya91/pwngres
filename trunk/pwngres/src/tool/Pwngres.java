@@ -3,6 +3,9 @@ package tool;
 import java.sql.*;
 import java.util.*;
 
+import com.pwngres.adt.QueryPlan;
+import com.pwngres.parser.QueryPlanBuilder;
+
 /**
  * Run this class with a SQL query as an argument
  * 
@@ -15,8 +18,8 @@ public class Pwngres {
 	
 	public static String host = "//localhost:5432/";
 	public static String username = "postgres";
-	public static String password = "postgres";
-	public static String database = "test";
+	public static String password = "jamn1986";
+	public static String database = "pwngres";
 	
 	public static void main(String[] args) {
 
