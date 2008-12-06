@@ -1,4 +1,5 @@
-package tool;
+package com.pwngres.adt;
+
 
 public class Join extends Operator{
 
@@ -17,8 +18,8 @@ public class Join extends Operator{
 		return condition;
 	}
 	
-	public String toString() {
-		return "{JOIN-" + id  + "," + condition + " || Inputs: " + inputs + "}";
-	}
+//	public String toString() {
+//		return "{JOIN-" + id  + "," + condition + " || Inputs: " + inputs + "}";
+//	}
 	
 }
