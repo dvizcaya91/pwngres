@@ -1,6 +1,8 @@
 package com.pwngres.parser;
 
-import java.util.List;
+import com.pwngres.parser.operators.JoinParser;
+import com.pwngres.parser.operators.ScanParser;
+
 
 public class ParserFactory {
 	
@@ -12,7 +14,14 @@ public class ParserFactory {
 	 * @return A parser of type <tt>type</tt>
 	 */
 	public static OperatorParser parserFor(PostgresOp type) {
-		return null; 
+		
+		
+		if (Family.JOIN.equals(type.getFamily()))
+			return new JoinParser(); 
+		else if (Family.SCAN.equals(type.getFamily())) 
+			return new ScanParser(); 
+		else
+			throw new RuntimeException("Cannot find parser for " + type); 
 	}
 	
 

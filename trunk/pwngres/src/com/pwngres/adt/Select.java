@@ -28,8 +28,7 @@ public class Select extends Operator{
 		return condition;
 	}
 	
-	public String toString() {
-		return "{SELECT-" + id + "," + table + "," + condition + " || Inputs: " + inputs + "}";
+	public String description() {
+		return "SCAN"; 
 	}
-	
 }

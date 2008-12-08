@@ -2,9 +2,7 @@ package com.pwngres.parser;
 
 import java.util.List;
 
-
 import com.pwngres.adt.Operator;
-import com.pwngres.adt.QueryPlan;
 
 
 /**
@@ -28,5 +26,5 @@ public interface OperatorParser {
 	 * 
 	 * @return A QueryPlan representing <tt>text</tt>
 	 */
-	public QueryPlan parse(List<String> text); 
+	public Operator parse(List<String> text); 
 }

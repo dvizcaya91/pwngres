@@ -1,7 +1,7 @@
 package com.pwngres.adt;
 
 
-public class Join extends Operator{
+public class Join extends Operator {
 
 	String condition;
 	
@@ -16,6 +16,10 @@ public class Join extends Operator{
 	
 	public String getCondition() {
 		return condition;
+	}
+	
+	public String description() {
+		return "JOIN"; 
 	}
 	
 //	public String toString() {

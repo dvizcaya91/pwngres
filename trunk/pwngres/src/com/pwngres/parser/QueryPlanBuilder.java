@@ -24,7 +24,14 @@ public class QueryPlanBuilder {
 	public QueryPlanBuilder() {}
 	
 	
-	public QueryPlan buildPlan(List<String> textPlan) {
+	/**
+	 * Consider removing this... just use the two lines  inside instead . 
+	 * Otherwise, each operationparser will need to know about this class too (sucks)
+	 * @param textPlan
+	 * @return
+	 */
+	
+	public Operator buildPlan(List<String> textPlan) {
 		
 		if (textPlan == null || textPlan.isEmpty()) 
 			return null;
@@ -33,7 +40,7 @@ public class QueryPlanBuilder {
 		// figure out what the root operation is and 
 		// dispatch to appropriate parser
 		OperatorParser parser = ParserFactory.parserFor(PostgresOp.typeOf(textPlan)); 
-		QueryPlan plan = parser.parse(textPlan); 
+		Operator plan = parser.parse(textPlan); 
 		
 		return plan;
 	}
