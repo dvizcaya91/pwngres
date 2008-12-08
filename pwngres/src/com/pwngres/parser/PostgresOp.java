@@ -3,6 +3,8 @@ package com.pwngres.parser;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.pwngres.debug.DebugConstants;
+
 /**
  * Represents each of the different operations provided by Postgres
  * 
@@ -24,7 +26,8 @@ public enum PostgresOp {
 	INDEX_SCAN(Family.SCAN, "Index Scan"), 
 	SEQ_SCAN(Family.SCAN, "Seq Scan"),
 	//MISC
-	MATERIALIZE(Family.MISC, "Materialize"); 
+	MATERIALIZE(Family.MISC, "Materialize"), 
+	HASH(Family.MISC, "Hash"); 
 	
 
 	
@@ -59,7 +62,8 @@ public enum PostgresOp {
 		
 		for(PostgresOp op : EnumSet.allOf(PostgresOp.class)) {
 			if (text.get(0).contains(op.getDescription())) {
-				System.out.println("Type for " + text.get(0) + " is " + op);
+				if (DebugConstants.DEBUG) 
+					System.out.println("Type for " + text.get(0) + " is " + op);
 				return op;
 			}
 		}
