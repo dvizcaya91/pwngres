@@ -1,25 +1,27 @@
 package com.pwngres.adt;
 
+import java.util.List;
+
 
 public class Join extends Operator {
 
-	String condition;
+	List<Condition> conditions;
 	
 	public Join(String id) {
 		super(id);
-		condition = null;
+		conditions = null;
 	}
 	
-	public void setCondition(String condition) {
-		this.condition = condition;
+	public void setConditions(List<Condition> condition) {
+		this.conditions = condition;
 	}
 	
-	public String getCondition() {
-		return condition;
+	public List<Condition> getConditions() {
+		return conditions;
 	}
 	
 	public String description() {
-		return "JOIN"; 
+		return "JOIN on " + conditions; 
 	}
 	
 //	public String toString() {

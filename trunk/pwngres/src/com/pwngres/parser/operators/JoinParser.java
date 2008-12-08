@@ -1,19 +1,15 @@
 package com.pwngres.parser.operators;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.pwngres.adt.Condition;
 import com.pwngres.adt.Join;
 import com.pwngres.adt.Operator;
-import com.pwngres.debug.DebugConstants;
 import com.pwngres.parser.ArraysUtil;
+import com.pwngres.parser.Family;
 import com.pwngres.parser.OperatorParser;
 import com.pwngres.parser.ParserFactory;
 import com.pwngres.parser.PostgresOp;
-import com.pwngres.parser.Family; 
 import com.pwngres.parser.PostgresUtil;
 
 
@@ -84,40 +80,13 @@ public class JoinParser extends OperatorParser {
 		
 		if (! ArraysUtil.flatten(condition).contains(PostgresUtil.CONDITION))
 			condition = null; 
-		List<Condition> conditions = getConditions(condition); 
-
+		List<Condition> conditions = PostgresUtil.getConditions(condition); 
+		join.setConditions(conditions); 
 		return join;
 
 	}
 	
-	
-	/*
-	 * Returns a list of conditions
-	 */
-	protected List<Condition> getConditions(String conditionString) {
-		
-		
-		if (conditionString == null)
-			return new LinkedList<Condition>(); 
-		
-		assert conditionString.contains("Cond"); 
-		
-		String paren = conditionString.substring(conditionString.indexOf('(') + 1,
-												 conditionString.indexOf(')')); 
-	
-		String[] result = paren.split(" "); 
-		
-		assert result.length == 3; 
-		
-		Condition cond = new Condition(result[0], result[1], result[2]); 
-		List<Condition> list = new LinkedList<Condition>(); 
-		list.add(cond);
-		
-		if (DebugConstants.DEBUG)
-			System.out.println("Condition is" + list ); 
-		System.out.println("List is " + list); 
-		return list;
-	}
+
 
 
 }

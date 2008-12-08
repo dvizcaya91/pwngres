@@ -3,6 +3,9 @@ package com.pwngres.parser;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.pwngres.adt.Condition;
+import com.pwngres.debug.DebugConstants;
+
 
 /**
  * Bunch of convenience static methods to parse different elements from a
@@ -74,4 +77,34 @@ public class PostgresUtil {
 		return lists;
 	}	
 	
+	
+	
+	
+	/*
+	 * Returns a list of conditions
+	 */
+	public static List<Condition> getConditions(String conditionString) {
+		
+		
+		if (conditionString == null)
+			return new LinkedList<Condition>(); 
+		
+		assert conditionString.contains("Cond"); 
+		
+		String paren = conditionString.substring(conditionString.indexOf('(') + 1,
+												 conditionString.indexOf(')')); 
+	
+		String[] result = paren.split(" "); 
+		
+		assert result.length == 3; 
+		
+		Condition cond = new Condition(result[0], result[1], result[2]); 
+		List<Condition> list = new LinkedList<Condition>(); 
+		list.add(cond);
+		
+		if (DebugConstants.DEBUG)
+			System.out.println("Condition is" + list ); 
+
+		return list;
+	}
 }

@@ -22,6 +22,6 @@ public class Condition {
 	}
 	
 	public String toString() {
-		return a + " ." + op + ". " + b; 
+		return a + " " + op + " " + b; 
 	}
 }
