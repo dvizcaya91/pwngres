@@ -1,34 +1,36 @@
 package com.pwngres.adt;
 
+import java.util.List;
+
 
 public class Select extends Operator{
 	
 	String table;
-	String condition;
+	List<Condition> conditions;
 	
 	public Select(String id) {
 		super(id);
 		table = null;
-		condition = null;
+		conditions = null;
 	}
 	
 	public void setTable(String table) {
 		this.table = table;
 	}
 	
-	public void setCondition(String condition) {
-		this.condition = condition;
+	public void setConditions(List<Condition> conditions) {
+		this.conditions = conditions;
 	}
 	
 	public String getTable() {
 		return table;
 	}
 	
-	public String getCondition() {
-		return condition;
+	public List<Condition> getConditions() {
+		return conditions;
 	}
 	
 	public String description() {
-		return "SCAN"; 
+		return "SCAN on " + conditions; 
 	}
 }

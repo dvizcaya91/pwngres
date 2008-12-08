@@ -1,6 +1,7 @@
 package com.pwngres.parser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -153,7 +154,7 @@ public class QueryPlanBuilder {
 			
 			// get condition, if any		
 			if (secondLine != null && secondLine.startsWith(SPACE) && !secondLine.contains(ARROW)) {
-				 select.setCondition(secondLine.trim()); 
+				 //select.setCondition(secondLine.trim()); 
 			}	
 			return select;
 			
@@ -163,7 +164,7 @@ public class QueryPlanBuilder {
 			
 			// get condition, if any		
 			if (secondLine != null && secondLine.startsWith(SPACE) && !secondLine.contains(ARROW)) {
-				 join.setCondition(secondLine.trim()); 
+				 //join.setConditions(Arrays.asList(secondLine.trim())); 
 			}	
 			return join;	
 			
