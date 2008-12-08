@@ -1,9 +1,7 @@
 package com.pwngres.parser;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents each of the different operations provided by Postgres
@@ -68,14 +66,4 @@ public enum PostgresOp {
 
 }
 
-/**
- * General classification of Postgres operations.
- * 
- * Currently supporting joins, scans, and misc
- * 
- * @author joseamuniz
- *
- */
-enum Family {
-	JOIN, SCAN, MISC;
-}
+

@@ -22,6 +22,14 @@ public class Operator {
 		return outputDestination;
 	}
 	
+	public void setChild(int i, Operator op) {
+		inputs.set(i, op); 
+	}
+	
+	public Operator getChild(int i) {
+		return inputs.get(i);
+	}
+	
 	public void setInputs(List<Operator> inputs) {
 		if (inputs != null)
 			this.inputs = new ArrayList<Operator>(inputs);
@@ -35,12 +43,17 @@ public class Operator {
 	
 	public String toString() {
 		//return "{" + id +  " || Inputs: " + inputs + "}";
-		
-		String string = "==D " + id; 
-		for (Operator op : inputs) {
-			string += "\n\t " + op; 
+		String string = "";
+		string += description(); 
+		for (Operator op : getInputs()) {
+			string += "\t => " + description(); 
 		}
-		return string;
+		
+		return string; 
+	}
+	
+	public String description() {
+		return "OPERATOR"; 
 	}
 	
 }
