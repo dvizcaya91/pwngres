@@ -42,7 +42,7 @@ public class JoinParser extends OperatorParser {
 		 * Error. won't start with arrow but rather with space then arrow :( sucky
 		 */
 		if (! ArraysUtil.flatten(text.get(1)).startsWith(PostgresUtil.ARROW)) {	
-			newText = ArraysUtil.subArray(text, 1, text.size() - 1); 
+			newText = ArraysUtil.subArray(text, 2, text.size() - 1); 
 
 		}
 

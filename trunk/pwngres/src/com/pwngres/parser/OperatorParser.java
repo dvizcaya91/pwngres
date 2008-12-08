@@ -3,6 +3,7 @@ package com.pwngres.parser;
 import java.util.List;
 
 import com.pwngres.adt.Operator;
+import com.pwngres.debug.DebugConstants;
 
 
 /**
@@ -27,9 +28,11 @@ public abstract class OperatorParser {
 	 * @return A QueryPlan representing <tt>text</tt>
 	 */
 	public Operator parse(List<String> text) {
-		System.out.println("Parsing : " );
-		for (String line : text) {
-			System.out.println(line); 
+		if (DebugConstants.DEBUG) {
+			System.out.println("Parsing : " );
+			for (String line : text) {
+				System.out.println(line); 
+			}
 		}
 
 		return null; 

@@ -1,6 +1,7 @@
 package com.pwngres.parser;
 
 import com.pwngres.parser.operators.JoinParser;
+import com.pwngres.parser.operators.AccumulateParser;
 import com.pwngres.parser.operators.ScanParser;
 
 
@@ -19,6 +20,8 @@ public class ParserFactory {
 			return new JoinParser(); 
 		else if (Family.SCAN.equals(type.getFamily())) 
 			return new ScanParser(); 
+		else if (Family.MISC.equals(type.getFamily()))
+			return new AccumulateParser();
 		else
 			throw new RuntimeException("Cannot find parser for " + type); 
 	}
