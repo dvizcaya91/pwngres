@@ -47,7 +47,14 @@ public class OpParseTest extends TestCase {
 	}
 	
 	//merge join 
-	
+	static {
+		joinFour.add("Merge Join  (cost=106925.64..180286.10 rows=2560152 width=29)");
+		joinFour.add("  Merge Cond: (\"outer\".paperid = \"inner\".id)");
+		joinFour.add("  ->  Index Scan using paperauths_paperid on paperauths pa  (cost=0.00..48270.00 rows=2667912 width=8)");
+		joinFour.add("  ->  Sort  (cost=106925.64..108538.79 rows=645260 width=21)");
+		joinFour.add("        Sort Key: a.id");
+		joinFour.add("        ->  Seq Scan on authors a  (cost=0.00..10849.60 rows=645260 width=21)");
+	}
 	
 	
     static {
@@ -76,6 +83,7 @@ public class OpParseTest extends TestCase {
     	System.out.println(new JoinParser().parse(joinOne).toString()); 
     	System.out.println(new JoinParser().parse(joinTwo).toString()); 
     	System.out.println(new JoinParser().parse(joinThree).toString()); 
+    	System.out.println(new JoinParser().parse(joinFour).toString()); 
     	
     }
     
