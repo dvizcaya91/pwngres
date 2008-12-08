@@ -8,9 +8,10 @@ import com.pwngres.parser.OperatorParser;
 import com.pwngres.parser.ParserFactory;
 import com.pwngres.parser.PostgresOp;
 
-public class MaterializeParser implements OperatorParser {
+public class MaterializeParser extends OperatorParser {
 
 	public Operator parse(List<String> text) {
+		super.parse(text);
 		List<String> subOp = ArraysUtil.subArray(text, 0, text.size() - 1); 
 		OperatorParser parser = ParserFactory.parserFor(PostgresOp.typeOf(subOp)); 
 					 
