@@ -14,6 +14,7 @@ import java.util.List;
 public class PostgresUtil {
 
 	public static final String ARROW = "->";
+	public static final String CONDITION = "Cond";
 	
 	
 	/**
