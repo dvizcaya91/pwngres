@@ -15,7 +15,7 @@ import com.pwngres.adt.Operator;
  * @author joseamuniz
  *
  */
-public interface OperatorParser {
+public abstract class OperatorParser {
 	
 	/**
 	 * Parses a given representing textual representation of a query plan into 
@@ -26,5 +26,12 @@ public interface OperatorParser {
 	 * 
 	 * @return A QueryPlan representing <tt>text</tt>
 	 */
-	public Operator parse(List<String> text); 
+	public Operator parse(List<String> text) {
+		System.out.println("Parsing : " );
+		for (String line : text) {
+			System.out.println(line); 
+		}
+
+		return null; 
+	}
 }

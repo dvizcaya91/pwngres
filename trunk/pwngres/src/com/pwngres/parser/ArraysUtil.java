@@ -5,6 +5,16 @@ import java.util.List;
 
 public class ArraysUtil {
 
+
+	/**
+	 * Removes the preceding space from a single line
+	 */
+	public static String flatten(String line) {
+		int i = 0; 
+		while (line.charAt(i) == ' ') 
+			i++; 
+		return line.substring(i);
+	}
 	/** 
 	 * Removes all starting empty spaces from each of the elements of the list
 	 * @param array The list of strings to be trimmed

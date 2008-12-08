@@ -14,8 +14,7 @@ public class ParserFactory {
 	 * @return A parser of type <tt>type</tt>
 	 */
 	public static OperatorParser parserFor(PostgresOp type) {
-		
-		
+				
 		if (Family.JOIN.equals(type.getFamily()))
 			return new JoinParser(); 
 		else if (Family.SCAN.equals(type.getFamily())) 

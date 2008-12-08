@@ -10,7 +10,7 @@ public class Operator {
 	
 	public Operator(String id) {
 		this.id = id;
-		inputs = null;
+		inputs = new ArrayList<Operator>();
 		outputDestination = null;
 	}
 	
@@ -23,7 +23,10 @@ public class Operator {
 	}
 	
 	public void setChild(int i, Operator op) {
-		inputs.set(i, op); 
+		if (inputs.size() < i + 1)
+			inputs.add(i, op); 
+		else
+			inputs.set(i, op); 
 	}
 	
 	public Operator getChild(int i) {
@@ -44,9 +47,19 @@ public class Operator {
 	public String toString() {
 		//return "{" + id +  " || Inputs: " + inputs + "}";
 		String string = "";
-		string += description(); 
+		string += description() + "\n";  
 		for (Operator op : getInputs()) {
-			string += "\t => " + description(); 
+			String subString = op.toString(); 
+			String[] tokenized = subString.split("\n"); 
+			
+			for (int i = 0; i < tokenized.length; i++) {
+				String token = tokenized[i];
+				if (i == 0)
+					string += "\t => " + token + "\n"; 
+				else
+					string += "\t" + token + "\n"; 
+
+			}
 		}
 		
 		return string; 

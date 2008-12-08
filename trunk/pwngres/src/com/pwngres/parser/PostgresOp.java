@@ -17,14 +17,14 @@ public enum PostgresOp {
 	
 	
 	//JOINS
-	MERGE_JOIN(Family.JOIN, "MERGE JOIN"), 
-	HASH_JOIN(Family.JOIN, "HASH JOIN"), 
-	NESTED_LOOPS_JOIN(Family.JOIN, "NESTED LOOP"),
+	MERGE_JOIN(Family.JOIN, "Merge Join"), 
+	HASH_JOIN(Family.JOIN, "Hash Join"), 
+	NESTED_LOOPS_JOIN(Family.JOIN, "Nested Loop"),
 	//SCANS
-	INDEX_SCAN(Family.SCAN, "INDEX SCAN"), 
-	SEQ_SCAN(Family.SCAN, "SEQUENTIAL SCAN"),
+	INDEX_SCAN(Family.SCAN, "Index Scan"), 
+	SEQ_SCAN(Family.SCAN, "Seq Scan"),
 	//MISC
-	MATERIALIZE(Family.MISC, "MATERIALIZE"); 
+	MATERIALIZE(Family.MISC, "Materialize"); 
 	
 
 	
@@ -57,11 +57,14 @@ public enum PostgresOp {
 		if (text == null || text.isEmpty())
 			return null; 
 		
-		for(PostgresOp op : EnumSet.allOf(PostgresOp.class))
-			if (op.getDescription().contains(text.get(0)))
+		for(PostgresOp op : EnumSet.allOf(PostgresOp.class)) {
+			if (text.get(0).contains(op.getDescription())) {
+				System.out.println("Type for " + text.get(0) + " is " + op);
 				return op;
+			}
+		}
 		
-		return null;
+		throw new RuntimeException("No such type found:  " + text.get(0)); 
 	}
 
 }

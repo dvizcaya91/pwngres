@@ -35,9 +35,10 @@ public class OpParseTest extends TestCase {
     
     @Test
     public void testScanParser() {
-    	new ScanParser().parse(seqScan);
-    	new ScanParser().parse(indexScan); 
-    	
+    	System.out.println(new ScanParser().parse(seqScan).toString());
+    	new ScanParser().parse(indexScan).toString(); 
+      	new JoinParser().parse(join); 
+            	
     	System.out.println(new JoinParser().parse(join).toString()); 
     	
     }
