@@ -27,7 +27,8 @@ public enum PostgresOp {
 	SEQ_SCAN(Family.SCAN, "Seq Scan"),
 	//MISC
 	MATERIALIZE(Family.MISC, "Materialize"), 
-	HASH(Family.MISC, "Hash"); 
+	HASH(Family.MISC, "Hash"), 
+	SORT(Family.MISC, "Sort"); 
 	
 
 	

@@ -3,6 +3,7 @@ package com.pwngres.parser;
 import com.pwngres.parser.operators.JoinParser;
 import com.pwngres.parser.operators.AccumulateParser;
 import com.pwngres.parser.operators.ScanParser;
+import com.pwngres.parser.operators.SortParser;
 
 
 public class ParserFactory {
@@ -20,6 +21,8 @@ public class ParserFactory {
 			return new JoinParser(); 
 		else if (Family.SCAN.equals(type.getFamily())) 
 			return new ScanParser(); 
+		else if (PostgresOp.SORT.equals(type))
+			return new SortParser();
 		else if (Family.MISC.equals(type.getFamily()))
 			return new AccumulateParser();
 		else
