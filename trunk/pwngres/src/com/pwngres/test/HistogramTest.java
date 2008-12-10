@@ -31,6 +31,10 @@ public class HistogramTest {
 	
 	@Test public void testRestructure() {
 		hist = new SelfTuningHistogram(0, 100, 200, 10);
+		hist.setDamping(1);
+		hist.setMergeThresh(0.015);
+		hist.setRestructureThresh(10);
+		hist.setSplitThresh(0.2);
 		
 		System.out.println(hist);
 		

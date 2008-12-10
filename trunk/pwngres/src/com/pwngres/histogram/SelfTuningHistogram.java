@@ -3,6 +3,7 @@ package com.pwngres.histogram;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class SelfTuningHistogram implements Histogram {
 	
@@ -20,6 +21,11 @@ public class SelfTuningHistogram implements Histogram {
 	private Range[] ranges;
 	
 	private int numberQueries;
+	
+	private double damping = DAMPING;
+	private int restructureThresh = RESTRUCTURE_THRESH;
+	private double mergeThresh = MERGE_THRESH;
+	private double splitThresh = SPLIT_THRESH;
 	
 	public SelfTuningHistogram(int min, int max, int total, int numBuckets) {
 		this.min = min;
@@ -52,6 +58,22 @@ public class SelfTuningHistogram implements Histogram {
 			restructure();
 	}
 	
+	public void setDamping(double damp) {
+		damping = damp;
+	}
+	
+	public void setRestructureThresh(int rt) {
+		restructureThresh = rt;
+	}
+	
+	public void setMergeThresh(double mt) {
+		mergeThresh = mt;
+	}
+	
+	public void setSplitThresh(double st) {
+		splitThresh = st;
+	}
+	
 	private void initialize() {
 		double freq = initialTotal / numBuckets;
 		double range = (max - min) / numBuckets;
@@ -72,7 +94,7 @@ public class SelfTuningHistogram implements Histogram {
 	}
 	
 	private boolean needsRestructure() {
-		return numberQueries >= RESTRUCTURE_THRESH;
+		return numberQueries >= restructureThresh;
 	}
 	
 	private void refineBucketFrequencies(int lower, int upper, int actual) {
@@ -84,7 +106,7 @@ public class SelfTuningHistogram implements Histogram {
 		double frac;
 		for (int i = 0; i < numBuckets; i++) {
 			frac = ranges[i].overlaps(lower, upper);
-			frequencies[i] = Math.max(frequencies[i] + DAMPING * err * frac * frequencies[i] / est, 0);
+			frequencies[i] = Math.max(frequencies[i] + damping * err * frac * frequencies[i] / est, 0);
 		}
 	}
 	
@@ -103,24 +125,31 @@ public class SelfTuningHistogram implements Histogram {
 			for (int i = 0; i < runs.size() - 1; i++) {
 				maxDiffs.add(maxDiff(runs.get(i), runs.get(i + 1)));
 			}
-			double minDiff = Collections.min(maxDiffs);
 			
-			if (minDiff <= MERGE_THRESH * initialTotal) {
-				// Merge the two runs
-				int index = maxDiffs.indexOf(minDiff);
-				toMerge = runs.get(index); // get the first run
-				toMerge.addAll(runs.get(index + 1)); // add the second one to it
-				runs.remove(index); // remove the old first run
-				runs.add(index, toMerge); // add the new one (merged)
-				runs.remove(index + 1); // remove the second run
-			} else {
-				// Done merging
-				doneMerging = true;
+			try {
+				double minDiff = Collections.min(maxDiffs);
+
+				if (minDiff <= mergeThresh * initialTotal) {
+					// Merge the two runs
+					int index = maxDiffs.indexOf(minDiff);
+					toMerge = runs.get(index); // get the first run
+					toMerge.addAll(runs.get(index + 1)); // add the second one to it
+					runs.remove(index); // remove the old first run
+					runs.add(index, toMerge); // add the new one (merged)
+					runs.remove(index + 1); // remove the second run
+				} else {
+					// Done merging
+					doneMerging = true;
+				}
+			} catch (NoSuchElementException e) {
+				// No restructuring
+				resetInformation();
+				return;
 			}
 		}
 		
 		// Pick buckets to split
-		int numSplits = (int) Math.round(SPLIT_THRESH * numBuckets);
+		int numSplits = (int) Math.round(splitThresh * numBuckets);
 		List<Integer> toSplit = new ArrayList<Integer>();
 		List<Double> freqs = new ArrayList<Double>(); // TODO: nasty
 		for (int i = 0; i < numBuckets; i++)
