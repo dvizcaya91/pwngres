@@ -19,7 +19,7 @@ public class Range {
 	}
 	
 	/**
-	 * Returns the fraction of overlap with this range. That is, is u-l is
+	 * Returns the fraction of overlap with this range. That is, if u-l is
 	 * bigger than upper-lower, then it will return 1. If they don't overlap
 	 * at all, returns 0.
 	 */

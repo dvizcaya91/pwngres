@@ -5,29 +5,75 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class SelfTuningHistogram implements Histogram {
+public class MicrosoftSTHistogram extends STHistogram {
 	
-	private static final double DAMPING = 1;
-	private static final int RESTRUCTURE_THRESH = 10;
-	private static final double MERGE_THRESH = 0.015;
-	private static final double SPLIT_THRESH = 0.2;
+	private enum RefinementMethod {
+		FREQUENCY,
+		RANGE,
+		HYBRID,
+		NORMAL
+	}
 	
-	private double min;
-	private double max;
-	private double initialTotal;
-	private final int numBuckets;
+	private enum RestructureTrigger {
+		QUERY_NUMBER,
+		CUM_ERROR,
+	}
 	
-	private double[] frequencies;
-	private Range[] ranges;
+	private enum SplitMethod {
+		FREQUENCY,
+		ERROR,
+		USAGE
+	}
+
+	// == Default parameters ==
 	
-	private int numberQueries;
+	// Triggers and methods
+	private static final RefinementMethod DEFAULT_REF_METHOD = RefinementMethod.HYBRID;
+	private static final RestructureTrigger DEFAULT_RES_TRIGGER = RestructureTrigger.QUERY_NUMBER;
+	private static final SplitMethod DEFAULT_SPLIT_METHOD = SplitMethod.FREQUENCY;
 	
-	private double damping = DAMPING;
-	private int restructureThresh = RESTRUCTURE_THRESH;
-	private double mergeThresh = MERGE_THRESH;
-	private double splitThresh = SPLIT_THRESH;
+	// Parameters used in all cases
+	private static final double DAMPING = 1; // For bucket refinement
+	private static final double MERGE_THRESH = 0.015; // For choosing which buckets to merge
+	private static final double SPLIT_THRESH = 0.2; // For choosing *number* of buckets to split
 	
-	public SelfTuningHistogram(int min, int max, int total, int numBuckets) {
+	// Params for restructure trigger
+	private static final int RES_QUERY_THRESH = 10; // For QUERY_NUMBER
+	private static final int RES_ERROR_THRESH = 100; // For CUM_ERROR
+	
+	
+	// == Actual instance fields ==
+	
+	// Type of algorithm we'll use
+	private final RefinementMethod refMethod;
+	private final RestructureTrigger resTrigger;
+	private final SplitMethod splitMethod;
+	
+	// Parameters used in all cases
+	private double damping = DAMPING; // For bucket refinement
+	private double mergeThresh = MERGE_THRESH; // For choosing which buckets to merge
+	private double splitThresh = SPLIT_THRESH; // For choosing *number* of buckets to split
+	
+	// Used for restructure trigger
+	private int resQueryThresh = RES_QUERY_THRESH; // Threshold for QUERY_NUMBER 
+	private double resErrorThresh = RES_ERROR_THRESH; // Threshold For CUM_ERROR
+	private int numberQueries; // Actual value for QUERY_NUMBER
+	private double cumError; // Actual value for CUM_ERROR
+	
+	// Used for split method
+	private double[] bucketError;
+	private double[] bucketUsage;
+	
+	
+	/**
+	 * Creates a new SelfTuningHistogram (lol, no shit).
+	 */
+	public MicrosoftSTHistogram(int min, int max, int total, int numBuckets,
+			RefinementMethod refType, RestructureTrigger resType, SplitMethod splitMethod) {
+		this.refMethod = (refType != null) ? refType : DEFAULT_REF_METHOD;
+		this.resTrigger = (resType != null) ? resType : DEFAULT_RES_TRIGGER;
+		this.splitMethod = (splitMethod != null) ? splitMethod : DEFAULT_SPLIT_METHOD;
+		
 		this.min = min;
 		this.max = max;
 		this.initialTotal = total;
@@ -38,32 +84,11 @@ public class SelfTuningHistogram implements Histogram {
 		
 		initialize();
 	}
-
-	@Override
-	public int get(int lower, int upper) {
-		double count = 0;
-		for (int i = 0; i < numBuckets; i++) {
-			count += ranges[i].overlaps(lower, upper) * frequencies[i];
-		}
-		return (int) count;
-	}
-
-	@Override
-	public void receive(int lower, int upper, int num) {
-		refineBucketFrequencies(lower, upper, num);
-		
-		updateInformation();
-		
-		if (needsRestructure())
-			restructure();
-	}
+	
+	// Setters for parameters
 	
 	public void setDamping(double damp) {
 		damping = damp;
-	}
-	
-	public void setRestructureThresh(int rt) {
-		restructureThresh = rt;
 	}
 	
 	public void setMergeThresh(double mt) {
@@ -74,51 +99,92 @@ public class SelfTuningHistogram implements Histogram {
 		splitThresh = st;
 	}
 	
-	private void initialize() {
+	public void setResQueryThresh(int rq) {
+		resQueryThresh = rq;
+	}
+	
+	public void setResErrorThresh(int re) {
+		resErrorThresh = re;
+	}
+	
+	@Override
+	protected void initialize() {
 		double freq = initialTotal / numBuckets;
 		double range = (max - min) / numBuckets;
 		for (int i = 0; i < numBuckets; i++) {
 			frequencies[i] = freq;
 			ranges[i] = new Range(i * range, (i + 1) * range);
 		}
-	}
-	
-	private void updateInformation() {
-		// Increase counter of how many times we've received information
-		numberQueries++;
 		
+		resetInformation();
 	}
 	
-	private void resetInformation() {
-		numberQueries = 0;
-	}
-	
-	private boolean needsRestructure() {
-		return numberQueries >= restructureThresh;
-	}
-	
-	private void refineBucketFrequencies(int lower, int upper, int actual) {
+	@Override
+	protected void refineBucketFrequencies(int lower, int upper, int actual) {
 		// Calculate absolute error
 		int est = get(lower, upper);
 		int err = actual - est;
 		
 		// Distribute it along the buckets
-		double frac;
-		for (int i = 0; i < numBuckets; i++) {
-			frac = ranges[i].overlaps(lower, upper);
-			frequencies[i] = Math.max(frequencies[i] + damping * err * frac * frequencies[i] / est, 0);
-		}
+		for (int i = 0; i < numBuckets; i++)
+			frequencies[i] = Math.max(frequencies[i] + damping * err * multiplier(lower, upper, actual, i), 0);
 	}
 	
-	private void restructure() {
+	private double multiplier(int lower, int upper, int actual, int iter) {
+		double mult = 1;
+		double freq = frequencies[iter] / get(lower, upper);
+		double range = ranges[iter].overlaps(lower, upper);
+		switch (refMethod) {
+		case FREQUENCY:
+			mult = freq;
+			break;
+		case RANGE:
+			mult = range;
+			break;
+		case HYBRID:
+			mult = freq * range;
+			break;
+		case NORMAL:
+			return 1;
+		}
+		return mult;
+	}
+	
+	@Override
+	protected void updateInformation(int l, int u, int actual) {
+		// Increase counter of how many times we've received information
+		numberQueries++;
+		cumError += Math.abs(actual - get(l, u));
+	}
+	
+	@Override
+	protected void resetInformation() {
+		numberQueries = 0;
+		cumError = 0;
+	}
+	
+	@Override
+	protected boolean needsRestructure() {
+		boolean restruct = false;
+		switch (resTrigger) {
+		case QUERY_NUMBER:
+			restruct = numberQueries >= resQueryThresh; break;
+		case CUM_ERROR:
+			restruct = cumError >= resErrorThresh; break;
+		}
+		return restruct;
+	}
+	
+	@Override
+	protected void restructure() {
 		
-		System.out.println("Starting restructuring");
+		System.out.println("Starting restructuring...");
 		
 		// Merge buckets
-		boolean doneMerging = false;
 		List<ArrayList<Double>> runs = initializeRuns();
 		ArrayList<Double> toMerge;
 		List<Double> maxDiffs;
+		boolean doneMerging = false;
 		while (!doneMerging) {
 			maxDiffs = new ArrayList<Double>();
 			// Get min diff between consecutive runs of buckets
@@ -149,35 +215,7 @@ public class SelfTuningHistogram implements Histogram {
 		}
 		
 		// Pick buckets to split
-		int numSplits = (int) Math.round(splitThresh * numBuckets);
-		List<Integer> toSplit = new ArrayList<Integer>();
-		List<Double> freqs = new ArrayList<Double>(); // TODO: nasty
-		for (int i = 0; i < numBuckets; i++)
-			freqs.add(frequencies[i]);
-		
-		List<Double> copyFreqs = new ArrayList<Double>(freqs);
-		while (toSplit.size() < numSplits) {
-			// Get current max and its index
-			double max = Collections.max(copyFreqs);
-			int index = freqs.indexOf(max);
-			
-			// Check if it will be merged or not
-			int cursor = 0;
-			boolean toBeMerged = false;
-			for (int j = 0; j < runs.size(); j++) {
-				// Find the run the bucket is at
-				if (index >= cursor && index < cursor + runs.get(j).size())
-					toBeMerged = runs.get(j).size() != 1;
-				cursor += runs.get(j).size();
-			}
-			
-			// If not, then we want to split it; store the bucket index in a list
-			if (!toBeMerged)
-				toSplit.add(index);
-			
-			// Don't consider this max again
-			copyFreqs.remove(max);
-		}
+		List<Integer> toSplit = getBucketsToSplit(runs);
 		
 		// We know which buckets to split and how many to merge; distribute
 		// extra buckets to splitting buckets based on frequencies
@@ -278,20 +316,37 @@ public class SelfTuningHistogram implements Histogram {
 		return Math.max(Math.abs(max1 - min2), Math.abs(max2 - min1));
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("[");
-		for (int i = 0; i < numBuckets; i++) {
-			sb.append("  " + (int) frequencies[i] + "  ");
+	private List<Integer> getBucketsToSplit(List<ArrayList<Double>> runs) {
+		int numSplits = (int) Math.round(splitThresh * numBuckets);
+		List<Integer> toSplit = new ArrayList<Integer>();
+		List<Double> freqs = new ArrayList<Double>(); // TODO: nasty
+		for (int i = 0; i < numBuckets; i++)
+			freqs.add(frequencies[i]);
+		
+		List<Double> copyFreqs = new ArrayList<Double>(freqs);
+		while (toSplit.size() < numSplits) {
+			// Get current max and its index
+			double max = Collections.max(copyFreqs);
+			int index = freqs.indexOf(max);
+			
+			// Check if it will be merged or not
+			int cursor = 0;
+			boolean toBeMerged = false;
+			for (int j = 0; j < runs.size(); j++) {
+				// Find the run the bucket is at
+				if (index >= cursor && index < cursor + runs.get(j).size())
+					toBeMerged = runs.get(j).size() != 1;
+				cursor += runs.get(j).size();
+			}
+			
+			// If not, then we want to split it; store the bucket index in a list
+			if (!toBeMerged)
+				toSplit.add(index);
+			
+			// Don't consider this max again
+			copyFreqs.remove(max);
 		}
-		sb.append("]\n");
-		sb.append("[");
-		for (int i = 0; i < numBuckets; i++) {
-			sb.append( (int) ranges[i].lower + "-" + (int) ranges[i].upper + " ");
-		}
-		sb.append("]");
-		return sb.toString();
+		return toSplit;
 	}
 
 }

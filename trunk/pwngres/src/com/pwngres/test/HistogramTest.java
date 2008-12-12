@@ -4,14 +4,15 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.pwngres.histogram.SelfTuningHistogram;
+import com.pwngres.histogram.MicrosoftSTHistogram;
+import com.pwngres.histogram.STHistogram;
 
 public class HistogramTest {
 	
-	SelfTuningHistogram hist;
+	STHistogram hist;
 	
 	@Test public void testInitialization() {
-		hist = new SelfTuningHistogram(0, 100, 300, 10);
+		hist = new MicrosoftSTHistogram(0, 100, 300, 10, null, null, null);
 		
 		for (int i = 0; i < 10; i++) {
 			assertEquals(30, hist.get(i * 10, (i + 1) * 10));
@@ -19,7 +20,7 @@ public class HistogramTest {
 	}
 	
 	@Test public void testUpdateSimple() {
-		hist = new SelfTuningHistogram(0, 100, 300, 10);
+		hist = new MicrosoftSTHistogram(0, 100, 300, 10, null, null, null);
 		
 //		System.out.println(hist);
 //		
@@ -30,10 +31,10 @@ public class HistogramTest {
 	}
 	
 	@Test public void testRestructure() {
-		hist = new SelfTuningHistogram(0, 100, 200, 10);
+		MicrosoftSTHistogram hist = new MicrosoftSTHistogram(0, 100, 200, 10, null, null, null);
 		hist.setDamping(1);
 		hist.setMergeThresh(0.015);
-		hist.setRestructureThresh(10);
+		hist.setResQueryThresh(10);
 		hist.setSplitThresh(0.2);
 		
 		System.out.println(hist);
