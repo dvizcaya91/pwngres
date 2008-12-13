@@ -1,0 +1,20 @@
+\begin{thebibliography}{1}
+
+\bibitem{Aboulnaga-99}
+{\sc Aboulnaga, A., and Chaudhuri, S.}
+\newblock Self-tuning histograms: Building histograms without looking at data.
+\newblock pp.~181--192.
+
+\bibitem{astrahan-76}
+{\sc Astrahan, M.~M., Blasgen, M.~W., Chamberlin, D.~D., Eswaran, K.~P., Gray,
+  J., Griffiths, P.~P., III, W. F.~K., Lorie, R.~A., McJones, P.~R., Mehl,
+  J.~W., Putzolu, G.~R., Traiger, I.~L., Wade, B.~W., and Watson, V.}
+\newblock System {R}: Relational approach to database management.
+\newblock {\em ACM Trans. Database Syst. 1}, 2 (1976), 97--137.
+
+\bibitem{Gibbons-97}
+{\sc Gibbons, P.~B., Matias, Y., and Poosala, V.}
+\newblock Fast incremental maintenance of approximate histograms.
+\newblock pp.~466--475.
+
+\end{thebibliography}

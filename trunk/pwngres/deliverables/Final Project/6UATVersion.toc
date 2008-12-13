@@ -1,0 +1,4 @@
+\beamer@endinputifotherversion {3.07pt}
+\beamer@sectionintoc {1}{Motivation}{3}{0}{1}
+\beamer@sectionintoc {2}{Previous Work}{6}{0}{1}
+\beamer@sectionintoc {3}{Proposal}{13}{0}{1}
