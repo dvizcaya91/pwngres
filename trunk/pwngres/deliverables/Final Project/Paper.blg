@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.7)
+The top-level auxiliary file: Paper.aux
+The style file: acm.bst
+Database file #1: Biblio.bib
+Warning--empty booktitle in aboulnaga-99
+Warning--empty booktitle in gibbons-97
+Warning--empty journal in selinger-98
+You've used 9 entries,
+            2253 wiz_defined-function locations,
+            586 strings with 5469 characters,
+and the built_in function-call counts, 3564 in all, are:
+= -- 350
+> -- 178
+< -- 0
++ -- 74
+- -- 64
+* -- 286
+:= -- 570
+add.period$ -- 27
+call.type$ -- 9
+change.case$ -- 59
+chr.to.int$ -- 0
+cite$ -- 12
+duplicate$ -- 119
+empty$ -- 263
+format.name$ -- 64
+if$ -- 737
+int.to.chr$ -- 0
+int.to.str$ -- 9
+missing$ -- 9
+newline$ -- 48
+num.names$ -- 18
+pop$ -- 61
+preamble$ -- 1
+purify$ -- 50
+quote$ -- 0
+skip$ -- 82
+stack$ -- 0
+substring$ -- 261
+swap$ -- 37
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 36
+warning$ -- 3
+while$ -- 37
+width$ -- 10
+write$ -- 90
+(There were 3 warnings)
