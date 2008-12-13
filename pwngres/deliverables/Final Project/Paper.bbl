@@ -1,0 +1,53 @@
+\begin{thebibliography}{1}
+
+\bibitem{aboulnaga-99}
+{\sc Aboulnaga, A., and Chaudhuri, S.}
+\newblock Self-tuning histograms: Building histograms without looking at data.
+\newblock pp.~181--192.
+
+\bibitem{astrahan-76}
+{\sc Astrahan, M.~M., Blasgen, M.~W., Chamberlin, D.~D., Eswaran, K.~P., Gray,
+  J., Griffiths, P.~P., III, W. F.~K., Lorie, R.~A., McJones, P.~R., Mehl,
+  J.~W., Putzolu, G.~R., Traiger, I.~L., Wade, B.~W., and Watson, V.}
+\newblock System {R}: Relational approach to database management.
+\newblock {\em ACM Trans. Database Syst. 1}, 2 (1976), 97--137.
+
+\bibitem{chen-94}
+{\sc Chen, C.~M., and Roussopoulos, N.}
+\newblock Adaptive selectivity estimation using query feedback.
+\newblock {\em SIGMOD Rec. 23}, 2 (1994), 161--172.
+
+\bibitem{christodoulakis-84}
+{\sc Christodoulakis, S.}
+\newblock Implications of certain assumptions in database performance
+  evauation.
+\newblock {\em ACM Trans. Database Syst. 9}, 2 (1984), 163--186.
+
+\bibitem{garcia-03}
+{\sc Garc\'{i}a, D.~F., and Garc\'{i}a, J.}
+\newblock {TPC-W} e-commerce benchmark evaluation.
+\newblock {\em Computer 36}, 2 (2003), 42--48.
+
+\bibitem{gibbons-97}
+{\sc Gibbons, P.~B., Matias, Y., and Poosala, V.}
+\newblock Fast incremental maintenance of approximate histograms.
+\newblock pp.~466--475.
+
+\bibitem{ionnadis-03}
+{\sc Ioannidis, Y.}
+\newblock The history of histograms (abridged).
+\newblock In {\em VLDB '2003: Proceedings of the 29th international conference
+  on Very large data bases\/} (2003), VLDB Endowment, pp.~19--30.
+
+\bibitem{ionnadis-95}
+{\sc Ioannidis, Y., and Poosala, V.}
+\newblock Histogram-based solutions to diverse database estimation problems.
+\newblock {\em Data Engineering Bulletin 18\/} (1995), 10--18.
+
+\bibitem{selinger-98}
+{\sc Selinger, P.~G., Astrahan, M.~M., Chamberlin, D.~D., Lorie, R.~A., and
+  Price, T.~G.}
+\newblock Access path selection in a relational database management system.
+\newblock 141--152.
+
+\end{thebibliography}
