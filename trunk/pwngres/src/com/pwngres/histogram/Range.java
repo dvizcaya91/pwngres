@@ -30,7 +30,7 @@ public class Range {
 	 * Returns the fraction of overlap of this range with the provided one.
 	 */
 	public double fractionOf(double l, double u) {
-		return Math.max(Math.min(upper, u) - Math.max(lower, l), 0) / (u - l);
+		return Math.max(Math.min(upper, u) - Math.max(lower, l) + 1, 0) / (u - l) + 1;
 	}
 
 }
