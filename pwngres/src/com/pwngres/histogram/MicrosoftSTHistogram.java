@@ -7,22 +7,22 @@ import java.util.NoSuchElementException;
 
 public class MicrosoftSTHistogram extends STHistogram {
 	
-	private enum RefinementMethod {
+	public enum RefinementMethod {
 		FREQUENCY,
 		RANGE,
 		HYBRID,
 		NORMAL
 	}
 	
-	private enum RestructureTrigger {
+	public enum RestructureTrigger {
 		QUERY_NUMBER,
 		CUM_ERROR,
 	}
 	
-	private enum SplitMethod {
-		FREQUENCY,
-		ERROR,
-		USAGE
+	public enum SplitMethod {
+		HIGH_FREQUENCY,
+		HIGH_ERROR,
+		HIGH_USAGE
 	}
 
 	// == Default parameters ==
@@ -30,7 +30,7 @@ public class MicrosoftSTHistogram extends STHistogram {
 	// Triggers and methods
 	private static final RefinementMethod DEFAULT_REF_METHOD = RefinementMethod.HYBRID;
 	private static final RestructureTrigger DEFAULT_RES_TRIGGER = RestructureTrigger.QUERY_NUMBER;
-	private static final SplitMethod DEFAULT_SPLIT_METHOD = SplitMethod.FREQUENCY;
+	private static final SplitMethod DEFAULT_SPLIT_METHOD = SplitMethod.HIGH_FREQUENCY;
 	
 	// Parameters used in all cases
 	private static final double DAMPING = 1; // For bucket refinement
@@ -61,8 +61,8 @@ public class MicrosoftSTHistogram extends STHistogram {
 	private double cumError; // Actual value for CUM_ERROR
 	
 	// Used for split method
-	private double[] bucketError;
-	private double[] bucketUsage;
+	private double[] bucketErrors; // For ERROR
+	private double[] bucketUsage; // For USAGE
 	
 	
 	/**
@@ -81,6 +81,9 @@ public class MicrosoftSTHistogram extends STHistogram {
 		
 		this.frequencies = new double[numBuckets];
 		this.ranges = new Range[numBuckets];
+		
+		this.bucketErrors = new double[numBuckets];
+		this.bucketUsage = new double[numBuckets];
 		
 		initialize();
 	}
@@ -127,22 +130,23 @@ public class MicrosoftSTHistogram extends STHistogram {
 		
 		// Distribute it along the buckets
 		for (int i = 0; i < numBuckets; i++)
-			frequencies[i] = Math.max(frequencies[i] + damping * err * multiplier(lower, upper, actual, i), 0);
+			frequencies[i] = Math.max(frequencies[i] + damping * err * multiplier(lower, upper, actual, i, est), 0);
 	}
 	
-	private double multiplier(int lower, int upper, int actual, int iter) {
+	private double multiplier(int lower, int upper, int actual, int iter, int estimate) {
 		double mult = 1;
-		double freq = frequencies[iter] / get(lower, upper);
-		double range = ranges[iter].overlaps(lower, upper);
+		double freq = frequencies[iter] / estimate;
+		double range = ranges[iter].fractionOf(lower, upper);
+		int applicable = range > 0 ? 1 : 0;
 		switch (refMethod) {
 		case FREQUENCY:
-			mult = freq;
+			mult = freq * applicable;
 			break;
 		case RANGE:
 			mult = range;
 			break;
 		case HYBRID:
-			mult = freq * range;
+			mult = freq * ranges[iter].overlaps(lower, upper);
 			break;
 		case NORMAL:
 			return 1;
@@ -152,15 +156,28 @@ public class MicrosoftSTHistogram extends STHistogram {
 	
 	@Override
 	protected void updateInformation(int l, int u, int actual) {
+		double err = actual - get(l, u);
+		
 		// Increase counter of how many times we've received information
+		// (for ResTrigger.QUERY_NUMBER
 		numberQueries++;
-		cumError += Math.abs(actual - get(l, u));
+		
+		// Add to absolute cumulative error (for ResTrigger.CUM_ERROR)
+		cumError += Math.abs(err);
+		
+		// Keep track of error per bucket and bucket usage
+		for (int i = 0; i < numBuckets; i++) {
+			bucketErrors[i] = bucketErrors[i] + Math.abs(err) * multiplier(l, u, actual, i, get(l, u));
+			bucketUsage[i] = bucketUsage[i] + ranges[i].overlaps(l, u);
+		}
 	}
 	
 	@Override
 	protected void resetInformation() {
 		numberQueries = 0;
 		cumError = 0;
+		bucketErrors = new double[numBuckets];
+		bucketUsage = new double[numBuckets];
 	}
 	
 	@Override
@@ -215,7 +232,14 @@ public class MicrosoftSTHistogram extends STHistogram {
 		}
 		
 		// Pick buckets to split
-		List<Integer> toSplit = getBucketsToSplit(runs);
+		List<Integer> toSplit = new ArrayList<Integer>();
+		try {
+			toSplit = getBucketsToSplit(runs);
+		} catch (NoSuchElementException e) {
+			System.out.println("Restructuring failed");
+			resetInformation();
+			return;
+		}
 		
 		// We know which buckets to split and how many to merge; distribute
 		// extra buckets to splitting buckets based on frequencies
@@ -228,12 +252,14 @@ public class MicrosoftSTHistogram extends STHistogram {
 		// How many of the extra buckets should go to each splitting bucket?
 		List<Integer> newBuckets = new ArrayList<Integer>(toSplit.size());
 		
+//		System.out.println("Split " + toSplit.size() + " buckets; merged " + extraBuckets + " buckets");
+		
 		// Get the total frequency first
 		double totalFreq = 0;
 		for (int i = 0; i < toSplit.size(); i++) {
 			totalFreq += frequencies[toSplit.get(i)];
 		}
-		// Next, decide how many go to each bucket
+		// Next, decide how many go to each bucket based on frequency
 		int assigned = 0;
 		for (int i = 0; i < toSplit.size(); i++) {
 			if (i == toSplit.size() - 1) // last bucket, just give it the rest
@@ -317,36 +343,71 @@ public class MicrosoftSTHistogram extends STHistogram {
 	}
 	
 	private List<Integer> getBucketsToSplit(List<ArrayList<Double>> runs) {
-		int numSplits = (int) Math.round(splitThresh * numBuckets);
+		
+		// List containing the indexes of the buckets we're going to split
 		List<Integer> toSplit = new ArrayList<Integer>();
-		List<Double> freqs = new ArrayList<Double>(); // TODO: nasty
+		
+		// Number of buckets we're going to split
+		int numSplits = (int) Math.round(splitThresh * numBuckets);
+		
+		// Put current frequencies in a list and make a copy (for SplitMethod.FREQUENCY)
+		List<Double> freqs = new ArrayList<Double>(); // TODO: nasty (same for others)
 		for (int i = 0; i < numBuckets; i++)
 			freqs.add(frequencies[i]);
 		
-		List<Double> copyFreqs = new ArrayList<Double>(freqs);
+		// Put bucket errors in a list and make a copy (for SplitMethod.ERROR)
+		List<Double> errors = new ArrayList<Double>();
+		for (int i = 0; i < numBuckets; i++)
+			errors.add(bucketErrors[i]);
+		
+		// Put bucket usage in a list and make a copy (for SplitMethod.USAGE)
+		List<Double> usages = new ArrayList<Double>();
+		for (int i = 0; i < numBuckets; i++)
+			usages.add(bucketUsage[i]);
+		
+		List<Double> relevant = new ArrayList<Double>();
+		switch (splitMethod) {
+		case HIGH_FREQUENCY:
+			relevant = freqs; break;
+		case HIGH_ERROR:
+			relevant = errors; break;
+		case HIGH_USAGE:
+			relevant = usages; break;
+		}
+		List<Double> copy = new ArrayList<Double>(relevant);
+		
+		// Get the most relevant buckets that are *not* going to be merged
 		while (toSplit.size() < numSplits) {
 			// Get current max and its index
-			double max = Collections.max(copyFreqs);
-			int index = freqs.indexOf(max);
+			double max = Collections.max(copy);
+			int index = relevant.indexOf(max);
+			if (toSplit.contains(index))
+				index++;
 			
 			// Check if it will be merged or not
-			int cursor = 0;
-			boolean toBeMerged = false;
-			for (int j = 0; j < runs.size(); j++) {
-				// Find the run the bucket is at
-				if (index >= cursor && index < cursor + runs.get(j).size())
-					toBeMerged = runs.get(j).size() != 1;
-				cursor += runs.get(j).size();
-			}
+			boolean toBeMerged = willBeMerged(index, runs);
 			
 			// If not, then we want to split it; store the bucket index in a list
 			if (!toBeMerged)
 				toSplit.add(index);
 			
 			// Don't consider this max again
-			copyFreqs.remove(max);
+			copy.remove(max);
 		}
+		
 		return toSplit;
+	}
+	
+	private boolean willBeMerged(int bucketIndex, List<ArrayList<Double>> runs) {
+		int cursor = 0;
+		boolean toBeMerged = false;
+		for (int j = 0; j < runs.size(); j++) {
+			// Find the run the bucket is at
+			if (bucketIndex >= cursor && bucketIndex < cursor + runs.get(j).size())
+				toBeMerged = runs.get(j).size() != 1;
+			cursor += runs.get(j).size();
+		}
+		return toBeMerged;
 	}
 
 }
