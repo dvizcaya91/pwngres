@@ -12,7 +12,10 @@
 
 
 \begin{abstract}
-In this paper, we explore the feasibility of implementing self-tuning histograms for OLTP databases. 
+In this paper, we explore the feasibility of implementing self-tuning histograms for OLTP databases. We describe
+different algorithm strategies for the building and maintaining of self-tuning histograms and explore their
+performance blah blah crap.
+
 \end{abstract}
 
 
@@ -24,31 +27,64 @@ Traditional database management systems based on the System-R design often inclu
 
 A common approach for estimating selectivities is to use a histogram associated with each field on each relation. The histogram captures the frequency of different values over a number of ranges.  Current commercial database systems like Oracle, Microsoft SQL Server, and Sybase, as well as open source alternatives like PostgreSQL and mySQL, all use this approach. 
 
-Estimating the selectivity from a given query is easy and requires almost no overhead when consulting the histogram. However, the process of building a histogram is usually expensive. The previously mentioned database use a mechanism of statistical analysis by which they analyze the entire table after a threshold of insertions is met. This mechanism is, however, prohibitive when large-sized tables are constantly updated. This situation is common in OLTP transactions, and therefore is worth discussing.
+Estimating the selectivity from a given query is easy and requires almost no overhead when consulting the histogram. However, the process of building a histogram is usually expensive. The previously mentioned database use a mechanism of statistical analysis by which they analyze the entire table after a threshold of insertions is met. This mechanism is, however, prohibitive when large-sized tables are constantly updated. This situation is common in OLTP transactions, and is therefore worth discussing.
 
 % Introduce self tuning stuff
+
+% Also talk about how we define 'histogram' for the purposes of this paper
 
 This paper is organized into seven parts. Section \ref{traditional-querying} describes how histograms are used in database systems. Section \ref{prev-work} shows some previous work on using results from queries to improve future cost estimates. Section \ref{our-work} then explains our modifications to the previous algorithms. Finally, Sections \ref{benchmark},  \ref{choice-queries}, and \ref{results} describe our framework for testing improvements for cost estimation over transactional loads. 
 
 
-
-
-
 \section{Histogram querying and traditional building}\label{traditional-querying}
-HI 
 
- As described in \cite{Gibbons-97}, a statistical approach to building histograms consists of 
+As described in \cite{Gibbons-97}, a statistical approach to building histograms consists of 
  
  
-\section{Previous self tuning histograms}\label{prev-work}
+\section{Previous work}\label{prev-work}
+
+Self-tuning histograms have been explored in the past.
 
 	\subsection{Curve fitting}
 		\cite{Aboulnaga-99}
 
-	\subsection{Aboulnaga }
+	\subsection{Aboulnaga}
+	
+	Aboulnaga and Chaudhuri \cite{Aboulnaga-99} describe an algorithm for self-tuning histograms based on two
+	considerations: bucket refinement and histogram restructuring. Bucket refinement occurs every time a selection
+	is executed on the histogram attribute. It consists of calculating the estimation error and distributing the
+	``blame'' among the histogram buckets that overlap with the selection range. The blame for the
+	error is distrubted based on bucket frequency. That is, buckets with higher frequency account for more of
+	the error than buckets with low frequencies. Then, bucket frequencies are increased or decreased to account
+	for under or overestimation, respectively, in proportion to their frequency, and damped by a damping factor
+	to prevent overfitting. (PUT PSEUDO-CODE?? more explanation??).
+	
+	Histrogram restructuring is introduced because no matter how well we can estimate the frequency of each bucket,
+	selectivity estimates may still be inaccurate if there is a lot of variation within a particular bucket. Thus,
+	we are interested in restructuring the histogram to arrive at a bucket partition in which each bucket has the
+	least variation possible.
+	
+	The proposed restructuring method relies on the assumption that splitting high frequency buckets will yield
+	a better histogram. 
+	consists of first merging a 
  
 \section{Modifications to proposed algorithms}\label{our-work}
 
+We implemented a modified version of the algorithm proposed in \cite{Aboulnaga-99}. In particular, we explore
+different strategies with respect to three different aspects: bucket refinement method, restructuring trigger, and
+split selection method.
+
+In terms of bucket refinement method, we explore . In addition to distributing the error in proportion to bucket frequency (as in \cite{Aboulnaga-99}, we also explore 
+
+Our algorithm can trigger the restructuring phase based on two thresholds. 
+
+Finally, we explore three strategies for deciding which buckets to split during restructuring. Again, we follow
+\cite{Aboulnaga-99} for the first of those strategies, which is to split the highest frequency buckets. The second
+strategy is to split buckets based on their cumulative error. We expect buck
+
+This forces us to keep error on a bucket per bucket basis.
+
+The third strategy is to choose buckets based on their usage. That is, more frequently used buckets will be split first.
 
 \section{Benchmark setup}\label{benchmark}
 
@@ -65,10 +101,9 @@ In order to test the accuracy of the previously discussed algorithms for self-tu
 \end{center}
 \end{figure}
 
-This system represents an intermediate layer between the end user and PostgreSQL, which intercepts the results from the database to the user and uses the cardinality to build a histogram. The different histograms can then be compared by their accuracy. 
+This system represents an intermediate layer between the end user and Postgres, which intercepts the results from the database to the user and uses the cardinality to build a histogram. The different histograms can then be compared by their accuracy.
 
-
-This layer is responsible for receiving user queries. The information is then fetched back to Postgres, which responds to the middle system with the query plan to be executed. The benchmark tool then simulates the query plan, by reducing it into a family of nested loop joins and sequential scans with a set of conditions. For each query, a collection of \texttt{receive} calls is sent to the histogram builder. For each scan, the executor makes one \texttt{receive} Êcall. In the case of a join, for each element in the outer loop, the executor can make a \texttt{receive}  call as it matches the join field in the outer table with the tuples in the inner table. For example, if Tables \ref{emptable}Ê and \ref{depttable} are joined by a natural join, where \textbf{Employees} is the outer table, then we get the following three distinct \texttt{receive} calls: 
+This layer is responsible for receiving user queries. The information is then fetched back to Postgres, which responds to the middle system with the query plan to be executed. The benchmark tool then simulates the query plan, by reducing it into a family of nested loop joins and sequential scans with a set of conditions. For each query, a collection of \texttt{receive} calls is sent to the histogram builder. For each scan, the executor makes one \texttt{receive} call. In the case of a join, for each element in the outer loop, the executor can make a \texttt{receive} call as it matches the join field in the outer table with the tuples in the inner table. For example, if Tables \ref{emptable} and \ref{depttable} are joined by a natural join, where \textbf{Employees} is the outer table, then we get the following three distinct \texttt{receive} calls: 
 
 \begin{verbatim}
 	 receive(``Dept.Country'', [3...3], 2)
@@ -90,10 +125,8 @@ This layer is responsible for receiving user queries. The information is then fe
 	\end{tabular}
 	\end{center}
 	\label{emptable}
-	\caption{Table for 	\textbf{Employees}Ê}
+	\caption{Table for 	\textbf{Employees}}
 	\end{table}
-	
-	
 	
 	\begin{table}
 	\begin{center}
@@ -107,45 +140,42 @@ This layer is responsible for receiving user queries. The information is then fe
 		\hline
 	\end{tabular}
 	\end{center}
-	\caption{Table for 	\textbf{Departments}Ê}
+	\caption{Table for \textbf{Departments}}
 	\label{depttable}
 	\end{table}
-	
-	
 
 
-
-
-
-
-The system assumes independence between selectivities of multiple conditions, either over a single table or over several tables. In other words, if a query of the form \texttt{SELECT ... WHERE $p_1$ and $p_2$}, we assume that $\sigma_{p_1} \times \sigma_{p_2} = \sigma_{p_1 \land p_2}$.  For this reason, some joins operators might be able to send \texttt{receive}Ê messages even when facing multiple conditions, especially when one is a join condition and the other is a filter on the data. 
-
+The system assumes independence between selectivities of multiple conditions, either over a single table or over several tables. In other words, if a query of the form \texttt{SELECT ... WHERE $p_1$ and $p_2$}, we assume that $\sigma_{p_1} \times \sigma_{p_2} = \sigma_{p_1 \land p_2}$.  For this reason, some joins operators might be able to send \texttt{receive}
+messages even when facing multiple conditions, especially when one is a join condition and the other is a filter on
+the data.
 
 We chose not to modify the source code for Postgres directly for several reasons:
 
 \begin{itemize}
-	\item The s
+	\item The source code is way more complex that what our little brains could handle (CHANGE).
 	\item  
 \end{itemize}
 
-However, the benchmark still makes sense since all of Postgres implementation of joins, merge joins, hash joins and nested loops joins can all be modified to emit appropriately. 
+However, the benchmark still makes sense since all of Postgres implementation of joins, merge joins, hash joins, and nested loops joins can all be modified to emit appropriately.
 
-Finally, it should be noted that we choose to measure our results in terms of row estimate errors, instead of query execution times. This decision was taken for several reasons :
+Finally, it should be noted that we choose to measure our results in terms of row estimate errors, instead of query execution times. This decision was taken for several reasons:
 
 \begin{itemize}	
-	\item Modifying the \texttt{pg\_statistic} Êtable in Postgres,which is responsible for holding
-		the histogram infromation, is not modifiable through an external interface. Although
-		this histogram is stored in a table 
+	\item The \texttt{pg\_statistic} table in Postgres, which is responsible for holding
+		the histogram information, is not modifiable through an external interface. Although
+		this histogram is stored in a regular table, the schema uses \texttt{anyarray} as the type
+		for the histrogram buckets column, which makes it impossible to change without touching
+		the Postgres source code.
 		
-	\item Given that we do not consider the effect of join selectivity estimate errors from this paper, 
-		we establish that a measurement of row selectivity in errors. 
+	\item Given that we do not consider the effect of join selectivity estimate errors in this paper,
+		we establish that a measurement of row selectivity in errors. (??)
 	
 	\item hej
-	
 	
 \end{itemize}
 
 \section{Choice of Queries and Insetions}\label{choice-queries}
+
 We use a framework of insertions in the spirit of the TPC-C benchmark. We include the following tables:
 
 \begin{enumerate}
@@ -158,7 +188,7 @@ We use a framework of insertions in the spirit of the TPC-C benchmark. We includ
 \section{Results}\label{results}
 
 
-\section{Conclusion}Ê
+\section{Conclusion}
 
 
 
@@ -169,7 +199,5 @@ We use a framework of insertions in the spirit of the TPC-C benchmark. We includ
 
 
 \end{document}
-
-
 
 %why this vs cq model. optimal for oltp txns with large loads, join selectivity still fails. 
