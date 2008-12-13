@@ -19,12 +19,18 @@ public class Range {
 	}
 	
 	/**
-	 * Returns the fraction of overlap with this range. That is, if u-l is
-	 * bigger than upper-lower, then it will return 1. If they don't overlap
-	 * at all, returns 0.
+	 * If u-l is bigger than upper-lower, then it will return 1. 
+	 * If they don't overlap at all, returns 0.
 	 */
 	public double overlaps(double l, double u) {
-		return Math.max(Math.min(upper, u) - Math.max(lower, l), 0) / range();
+		return Math.max(Math.min(upper, u) - Math.max(lower, l) + 1, 0) / range();
+	}
+	
+	/**
+	 * Returns the fraction of overlap of this range with the provided one.
+	 */
+	public double fractionOf(double l, double u) {
+		return Math.max(Math.min(upper, u) - Math.max(lower, l), 0) / (u - l);
 	}
 
 }
