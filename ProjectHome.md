@@ -1,0 +1,1 @@
+A benchmarking tool for self-tuning histograms built on top of Postgres. It adds an extra layer that receives queries from the user, dispatches the query to Postgres, and uses the resultset cardinalities to dynamically modify the Postgres histogram.
